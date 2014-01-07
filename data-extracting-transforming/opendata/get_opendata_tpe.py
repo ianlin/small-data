@@ -5,44 +5,61 @@ import sys
 import json
 import urllib2
 
-try:
-    query_type = sys.argv[1]
-except:
-    query_type = ''
+def usage():
+    print 'Usage: python get_opendata_tpe.py [store_discount|companies_in_neihu|public_toilet]'
 
-if query_type == 'store_discount':
-    url = 'http://data.taipei.gov.tw/opendata/apply/json/NzRBNTc0NDUtMjMxMi00RTk1LTkxMjgtNzgzMzU5MEQzRDc3'
-    required_keys = ('name', 'district', 'address', 'telephone', 'discountContent')
-elif query_type == 'companies_in_neihu':
-    url = 'http://data.taipei.gov.tw/opendata/apply/json/OUU2MzJDRTEtRTA4Ri00Q0FDLTkzQjctQUE5OUNCREREMjFE'
-    required_keys = ('VAT', 'Name', 'Address')
-elif query_type == 'public_toilet':
-    url = 'http://data.taipei.gov.tw/opendata/apply/query/NTQ4QTg2RjMtQjg0NC00REIxLUFCMUMtMzBGNTE5RTdCRUY3?$format=json'
-    required_keys = ('title', 'dep_content', 'address', 'lng', 'lat')
-else:
-    print '[ERROR] Unsupported query type ({0})'.format(query_type)
-    sys.exit(1)
+def extract_data(url):
+    f = urllib2.urlopen(url)
+    data = json.loads(f.read())
+    return data
 
-f = urllib2.urlopen(url)
-data = json.loads(f.read())
+def transform_data(data):
+    cnt = 0
+    result = ''
+    for d in data:
+        row = ''
+        for k in required_keys:
+            if not row:
+                row = str(cnt)
+            if d[k]:
+                # 去掉前後空白
+                value = d[k].encode('utf8').strip()
+                # 去掉全形空白
+                value = value.replace('　', '')
+                if query_type == 'public_toilet' and k == 'title':
+                    value = value.replace('公廁坐落：', '')
+                row += ',' + value
 
-cnt = 0
-result = ''
-for d in data:
-    row = ''
-    for k in required_keys:
-        if not row:
-            row = str(cnt)
-        if d[k]:
-            value = d[k].encode('utf8').strip()
-            if query_type == 'public_toilet' and k == 'title':
-                value = value.replace('公廁坐落：', '')
-            row += ',' + value
+        if not result:
+            result += row
+        else:
+            result += '\n' + row
+        cnt += 1
+    return result
 
-    if not result:
-        result += row
+if __name__ == '__main__':
+    try:
+        query_type = sys.argv[1]
+    except:
+        usage()
+        sys.exit(1)
+
+    if query_type == 'store_discount':
+        url = 'http://data.taipei.gov.tw/opendata/apply/json/NzRBNTc0NDUtMjMxMi00RTk1LTkxMjgtNzgzMzU5MEQzRDc3'
+        required_keys = ('name', 'district', 'address', 'telephone', 'discountContent')
+    elif query_type == 'companies_in_neihu':
+        url = 'http://data.taipei.gov.tw/opendata/apply/json/OUU2MzJDRTEtRTA4Ri00Q0FDLTkzQjctQUE5OUNCREREMjFE'
+        required_keys = ('VAT', 'Name', 'Address')
+    elif query_type == 'public_toilet':
+        url = 'http://data.taipei.gov.tw/opendata/apply/query/NTQ4QTg2RjMtQjg0NC00REIxLUFCMUMtMzBGNTE5RTdCRUY3?$format=json'
+        required_keys = ('title', 'dep_content', 'address', 'lng', 'lat')
     else:
-        result += '\n' + row
-    cnt += 1
+        print '[ERROR] Unsupported query type ({0})\n'.format(query_type)
+        usage()
+        sys.exit(1)
 
-print result
+    data = extract_data(url)
+    #print data
+
+    result = transform_data(data)
+    print result

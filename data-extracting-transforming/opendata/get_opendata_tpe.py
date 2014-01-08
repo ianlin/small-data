@@ -22,8 +22,9 @@ def transform_data(data):
             if not row:
                 row = str(cnt)
             if d[k]:
+                value = d[k].encode('utf8')
                 # 去掉前後空白
-                value = d[k].encode('utf8').strip()
+                value = value.strip()
                 # 去掉全形空白
                 value = value.replace('　', '')
                 if query_type == 'public_toilet' and k == 'title':

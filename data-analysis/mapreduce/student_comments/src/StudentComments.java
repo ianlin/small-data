@@ -5,6 +5,9 @@ import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
+import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
@@ -12,7 +15,7 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 
-public class StudentComments {
+public class StudentComments extends Configured implements Tool {
 
     public static class StudentCommentsMapper
         extends Mapper<LongWritable, Text, Text, Text> {
@@ -27,21 +30,27 @@ public class StudentComments {
         public void addCompliments() {
             COMPLIMENTS.put("不錯", new Integer(1));
             COMPLIMENTS.put("nice", new Integer(2));
-            COMPLIMENTS.put("good", new Integer(2));
-            COMPLIMENTS.put("很清楚", new Integer(3));
-            COMPLIMENTS.put("很好", new Integer(3));
-            COMPLIMENTS.put("excellent", new Integer(4));
-            COMPLIMENTS.put("讚", new Integer(5));
-            COMPLIMENTS.put("brilliant", new Integer(5));
+            COMPLIMENTS.put("good", new Integer(3));
+            COMPLIMENTS.put("very good", new Integer(4));
+            COMPLIMENTS.put("很清楚", new Integer(5));
+            COMPLIMENTS.put("很好", new Integer(6));
+            COMPLIMENTS.put("excellent", new Integer(7));
+            COMPLIMENTS.put("讚啦", new Integer(8));
+            COMPLIMENTS.put("太讚", new Integer(9));
+            COMPLIMENTS.put("brilliant", new Integer(10));
         }
 
         public void addComplaints() {
             COMPLAINTS.put("don't understand", new Integer(-1));
-            COMPLAINTS.put("聽不懂", new Integer(-1));
-            COMPLAINTS.put("bad", new Integer(-2));
-            COMPLAINTS.put("鳥", new Integer(-3));
-            COMPLAINTS.put("sucks", new Integer(-4));
-            COMPLAINTS.put("爛", new Integer(-5));
+            COMPLAINTS.put("聽不懂", new Integer(-2));
+            COMPLAINTS.put("bad", new Integer(-3));
+            COMPLAINTS.put("鳥", new Integer(-4));
+            COMPLAINTS.put("sucks", new Integer(-5));
+            COMPLAINTS.put("爛", new Integer(-6));
+            COMPLAINTS.put("hell", new Integer(-7));
+            COMPLAINTS.put("無言", new Integer(-8));
+            COMPLAINTS.put("bollocks", new Integer(-9));
+            COMPLAINTS.put("超爛", new Integer(-10));
         }
 
         public void addLecturers() {
@@ -119,19 +128,19 @@ public class StudentComments {
     }
 
     public static void main(String[] args) throws Exception {
-        /*
+        int retCode = ToolRunner.run(new StudentComments(), args);
+        System.exit(retCode);
+    }
+
+    @Override
+    public int run(String[] args) throws Exception {
         if (args.length != 2) {
             System.err.println("Usage: MaxTemperature <input path> <output path>");
             System.exit(-1);
         }
-        */
 
-        Job job = new Job();
-        job.setJarByClass(StudentComments.class);
-        job.setJobName("Student Comments");
-
-        FileInputFormat.addInputPath(job, new Path(args[0]));
-        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+        Job job = new Job(getConf(), "Student Comments");
+        job.setJarByClass(getClass());
 
         job.setMapperClass(StudentCommentsMapper.class);
         job.setReducerClass(StudentCommentsReducer.class);
@@ -139,6 +148,9 @@ public class StudentComments {
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
 
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+        FileInputFormat.addInputPath(job, new Path(args[0]));
+        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+
+        return job.waitForCompletion(true) ? 0 : 1;
     }
 }

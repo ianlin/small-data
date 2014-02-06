@@ -90,13 +90,13 @@ DISTRICTS = (
 )
 
 COMPLIMENTS = (
-    '{} is very good', '{} is excellent', '{} is brilliant', '{} is nice', '{} is a good lecturer',
-    '{} 講的不錯', '{} 講得很清楚', '{} 很好', '{} 讚啦', '{} 太讚了'
+    '{0} is very good', '{0} is excellent', '{0} is brilliant', '{0} is nice', '{0} is a good lecturer',
+    '{0} 講的不錯', '{0} 講得很清楚', '{0} 很好', '{0} 讚啦', '{0} 太讚了'
 )
 
 COMPLAINTS = (
-    '{} sucks', '{} is bad', 'I don\'t understand what {} is talking about...',
-    '{} 講得很爛', '我聽不懂 {} 在講什麼', '{} 超爛', '{} 超鳥',
+    '{0} sucks', '{0} is bad', 'I don\'t understand what {0} is talking about...', 'what the hell is {0} doing?', '{0} bollocks',
+    '{0} 講得很爛', '我聽不懂 {0} 在講什麼', '{0} 超爛', '{0} 超鳥', '對 {0} 感到無言'
 )
 
 
@@ -129,7 +129,6 @@ def get_comments():
         comments = COMPLIMENTS[random.randint(0, len(COMPLIMENTS) - 1)]
     else:
         comments = COMPLAINTS[random.randint(0, len(COMPLAINTS) - 1)]
-
     return comments.format(lecturer)
 
 if __name__ == '__main__':

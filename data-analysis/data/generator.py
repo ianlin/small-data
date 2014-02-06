@@ -7,7 +7,7 @@ import sys
 import json
 from optparse import OptionParser
 
-TOTAL_RECORD = 25000000
+TOTAL_RECORD = 1250000
 IAN_PERCENTAGE = 20
 HENRY_PERCENTAGE = 20
 IAN_USED = 0

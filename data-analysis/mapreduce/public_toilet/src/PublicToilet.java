@@ -1,4 +1,6 @@
 import java.util.*;
+import java.util.regex.Pattern;
+import java.util.regex.Matcher;
 import java.io.IOException;
 
 import org.apache.hadoop.io.IntWritable;
@@ -17,10 +19,13 @@ import org.apache.hadoop.mapreduce.Reducer;
 public class PublicToilet extends Configured implements Tool {
 
     public static class PublicToiletMapper
-        extends Mapper<LongWritable, Text, Text, Text> {
+        extends Mapper<LongWritable, Text, Text, IntWritable> {
 
         private Text retkey = new Text();
-        private Text retvalue = new Text();
+
+        public boolean isGoodToilet(float total, float first, float second) {
+            return (first + second) / total >= 0.75 ? true : false;
+        }
 
         @Override
         public void map(LongWritable key, Text value, Context context)
@@ -28,32 +33,39 @@ public class PublicToilet extends Configured implements Tool {
 
             if (value.charAt(0) != '#') {
                 String[] line_split = value.toString().split(",");
-                if (line_split[7].trim().equals("1")) {
-                    retkey.set(line_split[1]);
-                    retvalue.set(line_split[8]);
-                    context.write(retkey, retvalue);
+                if (line_split[7].trim().equals("1") && ! line_split[2].trim().equals("0")) {
+                    float total = Integer.parseInt(line_split[2]);
+                    float first = Integer.parseInt(line_split[3]);
+                    float second = Integer.parseInt(line_split[4]);
+                    if (isGoodToilet(total, first, second)) {
+                        //regex.Pattern p = regex.Pattern.compile("^\u81fa\u5317\u5e02([^\u5340\u5e02]+\u5340).*");
+                        Pattern p = Pattern.compile("^臺北市([^市區]+區).*");
+                        Matcher m = p.matcher(line_split[8]);
+                        if (m.matches()) {
+                            String district = m.group(1);
+                            retkey.set(district);
+                            context.write(retkey, new IntWritable(1));
+                        }
+                    }
                 }
             }
         }
     }
 
-    /*
     public static class PublicToiletReducer
-        extends Reducer<Text, Text, Text, IntWritable> {
+        extends Reducer<Text, IntWritable, Text, IntWritable> {
 
         @Override
-        public void reduce(Text key, Iterable<Text> values, Context context)
+        public void reduce(Text key, Iterable<IntWritable> values, Context context)
             throws IOException, InterruptedException {
 
             int sum = 0;
-            for (Text v : values) {
-                String[] v_split = v.toString().split(",");
-                sum += Integer.parseInt(v_split[v_split.length - 1]);
+            for (IntWritable v : values) {
+                sum += v.get();
             }
             context.write(key, new IntWritable(sum));
         }
     }
-    */
 
     public static void main(String[] args) throws Exception {
         int retCode = ToolRunner.run(new PublicToilet(), args);
@@ -73,7 +85,10 @@ public class PublicToilet extends Configured implements Tool {
         job.setJarByClass(getClass());
 
         job.setMapperClass(PublicToiletMapper.class);
-        //job.setReducerClass(PublicToiletReducer.class);
+        job.setReducerClass(PublicToiletReducer.class);
+
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(IntWritable.class);
 
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);

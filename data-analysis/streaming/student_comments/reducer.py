@@ -1,20 +1,23 @@
 #!/usr/bin/python
 
 import sys
-import json
 
-if __name__ == '__main__':
+def main():
     lastkey = None
-    cnt = 0
+    sum = 0
     for line in sys.stdin:
-        key = line.strip().split('\t')[0]
+        key, value = line.split('\t')
+        score = int(value.split(',')[-1])
         if not lastkey:
             lastkey = key
         if key == lastkey:
-            cnt += 1
+            sum += score
         else:
-            print lastkey + '\t' + str(cnt)
-            cnt = 1
+            print lastkey + '\t' + str(sum)
+            sum = score
         lastkey = key
     if lastkey:
-        print lastkey + '\t' + str(cnt)
+        print lastkey + '\t' + str(sum)
+
+if __name__ == '__main__':
+    main()

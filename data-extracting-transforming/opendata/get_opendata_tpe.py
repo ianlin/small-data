@@ -29,6 +29,16 @@ def transform_data(data):
                 value = value.replace('　', '')
                 if query_type == 'public_toilet' and k == 'title':
                     value = value.replace('公廁坐落：', '')
+                if query_type == 'public_toilet' and k == 'dep_content':
+                    value_split = value.split('，')
+                    value = ''
+                    if len(value_split) == 5:
+                        handicapped = '0'
+                    else:
+                        handicapped = '1'
+                    for i in xrange(5):
+                        value += value_split[i].split('：')[1] + ','
+                    value += handicapped
                 row += ',' + value
 
         if not result:

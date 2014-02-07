@@ -1,0 +1,86 @@
+------------------------------------------------
+--Hive Partition--
+------------------------------------------------
+CREATE TABLE logs_p (ts BIGINT, line STRING)
+PARTITIONED BY (dt STRING, country STRING)
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ',';
+
+LOAD DATA LOCAL INPATH '/home/cloudera/henry/testdata/fakelog2.log'
+OVERWRITE INTO TABLE logs_p
+PARTITION (dt='2014-02-07', country='CN');
+
+------------------------------------------------
+--Hive Bucket--
+------------------------------------------------
+CREATE TABLE logs_b0 (id INT, name STRING)
+CLUSTERED BY (id) SORTED BY (id ASC) INTO 2 BUCKETS
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ',';
+
+CREATE TABLE logs_b1 (id INT, name STRING)
+CLUSTERED BY (id) SORTED BY (id ASC) INTO 2 BUCKETS
+ROW FORMAT DELIMITED
+FIELDS TERMINATED BY ',';
+
+SET hive.enforce.bucketing=true;
+
+LOAD DATA LOCAL INPATH '/home/cloudera/henry/testdata/fakelog3.log'
+OVERWRITE INTO TABLE logs_b0;
+
+INSERT OVERWRITE TABLE logs_b1
+SELECT * FROM logs_b0;
+
+
+
+------------------------------------------------
+--Hive Sampling--
+------------------------------------------------
+--SELECT * FROM bucketed_users
+--TABLESAMPLE(BUCKET 1 OUT OF 2 ON id)
+
+
+------------------------------------------------
+--Hive Multitable Insert--
+------------------------------------------------
+FROM final_result
+INSERT OVERWRITE TABLE grp1
+        SELECT id, name, SUM(score)
+        GROUP BY id
+INSERT OVERWRITE TABLE grp2
+        SELECT id, count(1)
+        GROUP BY id;
+
+------------------------------------------------
+--Hive CTAS--
+------------------------------------------------
+CREATE TABLE tmp
+AS
+SELECT id, name
+FROM orig_data;
+
+
+------------------------------------------------
+--Hive TRANSFORM -- ( TAB Delimiter )
+------------------------------------------------
+ADD FILE '/home/cloudera/henry/testdata/age_filter_gt_25.py'
+FROM orig_data
+SELECT TRANSFORM( user, score, age )
+USING 'age_filter_gt_25.py'
+AS user, score;
+
+------------------------------------------------
+--Hive MAP REDUCE-- ( TAB Delimiter )
+------------------------------------------------
+ADD FILE '/home/cloudera/henry/testdata/my_maper.py'
+ADD FILE '/home/cloudera/henry/testdata/my_reducer.py'
+FROM (
+    FROM table
+    MAP table.f1 table.f2
+    USING 'my_maper.py'
+    AS mp1, mp2
+    CLUSTER BY mp1) map_output
+  INSERT OVERWRITE TABLE result
+    REDUCE map_output.mp1, map_output.mp2
+    USING 'my_reducer.py'
+    AS reducef1, reducef2;

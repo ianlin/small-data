@@ -3,6 +3,10 @@
 function install_packages() {
     # install lxml python module
     pkgs="python-lxml"
+
+    # install chinese font
+    pkgs="$pkgs cjkuni-uming-fonts"
+
     sudo yum install -y $pkgs
 }
 
@@ -52,9 +56,14 @@ function setup_mysql() {
     echo "User data has been inserted to table 'user' in database 'hadoop'."
 }
 
+function zhtw_support() {
+    sudo echo 'SUPPORTED="zh_TW.UTF-8:zh_TW.Big5:zh_TW:zh:en_US.UTF-8:en_US:en"' >> /etc/sysconfig/i18n
+}
+
 function main() {
     install_packages
     setup_mysql
+    zhtw_support
 }
 
 main

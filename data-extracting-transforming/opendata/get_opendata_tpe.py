@@ -10,10 +10,11 @@ def usage():
 
 def extract_data(url):
     f = urllib2.urlopen(url)
-    data = json.loads(f.read())
+    data = f.read()
     return data
 
 def transform_data(data):
+    data = json.loads(data)
     cnt = 0
     result = ''
     for d in data:
@@ -60,7 +61,7 @@ if __name__ == '__main__':
         required_keys = ('name', 'district', 'address', 'telephone', 'discountContent')
     elif query_type == 'companies_in_neihu':
         url = 'http://data.taipei.gov.tw/opendata/apply/json/OUU2MzJDRTEtRTA4Ri00Q0FDLTkzQjctQUE5OUNCREREMjFE'
-        required_keys = ('VAT', 'Name', 'Address')
+        required_keys = (u'統編', u'公司名稱', u'公司地址')
     elif query_type == 'public_toilet':
         url = 'http://data.taipei.gov.tw/opendata/apply/query/NTQ4QTg2RjMtQjg0NC00REIxLUFCMUMtMzBGNTE5RTdCRUY3?$format=json'
         required_keys = ('title', 'dep_content', 'address', 'lng', 'lat')

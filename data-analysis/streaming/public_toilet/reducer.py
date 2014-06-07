@@ -22,7 +22,6 @@ def main(stdin):
     stdin = stdin.readlines()
     total_toilet = len(stdin)
     lastkey = None
-    cnt = 0
     for line in stdin:
         key, value = line.strip().split('\t')
         if not lastkey:
@@ -30,15 +29,13 @@ def main(stdin):
         if key not in result:
             result[key] = {'total': 0, 'good': 0}
         if key == lastkey:
-            cnt += 1
             result[key]['good'] += int(value)
             result[key]['total'] += 1
         else:
-            result[lastkey]['good'] += int(value)
+            result[key]['good'] += int(value)
             result[key]['total'] += 1
             print '\t'.join((lastkey, str(result[lastkey]['total']), str(result[lastkey]['good']),\
                              str(float(result[lastkey]['good'] / result[lastkey]['total']))))
-            cnt = 1
         lastkey = key
     if lastkey:
         print '\t'.join((lastkey, str(result[lastkey]['total']), str(result[lastkey]['good']),\
